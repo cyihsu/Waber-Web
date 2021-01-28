@@ -15,9 +15,10 @@ function SignUpAsPassengerForm({switchForm, switchType}) {
     const submit = (e) => {
         e.preventDefault();
         userService.signUpAsPassenger({
-            type: TYPE_PASSENGER,
-
-        })
+            name: e.target[0].value,
+            email: e.target[1].value,
+            password: e.target[2].value
+        }).then(res => console.log(res.data))
     };
     return (
         <form className="sign-up-form" onSubmit={submit}>
@@ -40,9 +41,12 @@ function SignUpAsPassengerForm({switchForm, switchType}) {
 function SignUpAsDriverForm({switchForm, switchType}) {
     const submit = (e) => {
         e.preventDefault();
-        userService.signUpAsPassenger({
-            type: TYPE_PASSENGER,
-        })
+        userService.signUpAsDriver({
+            name: e.target[0].value,
+            email: e.target[1].value,
+            password: e.target[2].value,
+            carType: e.target[3].value
+        }).then(res => console.log(res.data))
     };
     return (
         <form className="sign-up-form" onSubmit={submit}>
@@ -75,7 +79,7 @@ function SignInForm({switchForm}) {
         userService.login({
             email: e.target[0].value,
             password: e.target[1].value,
-        })
+        }).then(res => console.log(res.data));
     };
 
     return (
