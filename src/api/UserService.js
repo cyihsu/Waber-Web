@@ -12,7 +12,7 @@ class UserService {
     }
 
     async login({email, password}) {
-        console.log('login: ' + email);
+        console.log(`login: ${email}`);
         return await this.axios.post('/api/users/signIn', {email, password});
     }
 
@@ -28,6 +28,13 @@ class UserService {
         return await this.axios.post('/api/drivers', {
             name, email, password, carType
         });
+    }
+
+    async updateLocation({userId, latitude, longitude}) {
+        console.log(`Update Location: N ${latitude}, E ${longitude}`);
+        return await this.axios.put(`/api/users/${userId}/location`, null, {
+            params: {latitude, longitude}
+        })
     }
 }
 

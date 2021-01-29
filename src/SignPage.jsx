@@ -1,7 +1,10 @@
 import React from "react";
 import './SignPage.css'
+import './main.css'
 import "bulma";
-import {TYPE_DRIVER, TYPE_PASSENGER, UserService} from "./api/UserService";
+import {UserService} from "./api/UserService";
+import {withRouter} from 'react-router-dom'
+import {KEY_USER_ID} from "./consts";
 
 const PASSENGER_TYPE = 'Passenger';
 const DRIVER_TYPE = 'Driver';
@@ -10,15 +13,39 @@ const SIGN_IN_FORM = 200;
 
 const userService = new UserService();
 
+function periodicallyUpdateLocation(userId) {
+    setInterval(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                userService.updateLocation({
+                    userId,
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                })
+                    .catch(err => console.error(err));
+            })
+        }
+    }, 3000)
+}
 
-function SignUpAsPassengerForm({switchForm, switchType}) {
+function loginSuccessfully({history, userData}) {
+    localStorage.setItem(KEY_USER_ID, userData.id);
+    periodicallyUpdateLocation(userData.id);
+    if (userData.carType) { // only the driver has the attribute 'carType'
+        history.push('/driver');
+    } else {
+        history.push('/car-hailing');
+    }
+}
+
+const SignUpAsPassengerForm = withRouter(({history, switchForm, switchType}) => {
     const submit = (e) => {
         e.preventDefault();
         userService.signUpAsPassenger({
             name: e.target[0].value,
             email: e.target[1].value,
             password: e.target[2].value
-        }).then(res => console.log(res.data))
+        }).then(res => loginSuccessfully({history, userData: res.data}));
     };
     return (
         <form className="sign-up-form" onSubmit={submit}>
@@ -27,7 +54,7 @@ function SignUpAsPassengerForm({switchForm, switchType}) {
             <input type="password" placeholder="password"/>
             <button type="submit">create</button>
             <p className="message">Already registered?
-                <a href="#" onClick={() => switchForm(SIGN_IN_FORM)}>
+                <a className="ml-1" href="#" onClick={() => switchForm(SIGN_IN_FORM)}>
                     Sign In
                 </a>
             </p>
@@ -36,9 +63,9 @@ function SignUpAsPassengerForm({switchForm, switchType}) {
             </div>
         </form>
     )
-}
+})
 
-function SignUpAsDriverForm({switchForm, switchType}) {
+const SignUpAsDriverForm = withRouter(({history, switchForm, switchType}) => {
     const submit = (e) => {
         e.preventDefault();
         userService.signUpAsDriver({
@@ -46,7 +73,7 @@ function SignUpAsDriverForm({switchForm, switchType}) {
             email: e.target[1].value,
             password: e.target[2].value,
             carType: e.target[3].value
-        }).then(res => console.log(res.data))
+        }).then(res => loginSuccessfully({history, userData: res.data}));
     };
     return (
         <form className="sign-up-form" onSubmit={submit}>
@@ -62,7 +89,7 @@ function SignUpAsDriverForm({switchForm, switchType}) {
             </div>
             <button type="submit">create</button>
             <p className="message">Already registered?
-                <a href="#" onClick={() => switchForm(SIGN_IN_FORM)}>
+                <a className="ml-1" href="#" onClick={() => switchForm(SIGN_IN_FORM)}>
                     Sign In
                 </a>
             </p>
@@ -71,15 +98,15 @@ function SignUpAsDriverForm({switchForm, switchType}) {
             </div>
         </form>
     )
-}
+});
 
-function SignInForm({switchForm}) {
+const SignInForm = withRouter(({history, switchForm}) => {
     const submit = (e) => {
         e.preventDefault();
         userService.login({
             email: e.target[0].value,
             password: e.target[1].value,
-        }).then(res => console.log(res.data));
+        }).then(res => loginSuccessfully({history, userData: res.data}));
     };
 
     return (
@@ -88,16 +115,16 @@ function SignInForm({switchForm}) {
             <input type="password" placeholder="password"/>
             <button type="submit">login</button>
             <p className="message">Not registered?
-                <a href="#" onClick={() => switchForm(SIGN_UP_FORM)}>
+                <a className="ml-1" href="#" onClick={() => switchForm(SIGN_UP_FORM)}>
                     Create an account
                 </a>
             </p>
         </form>
     )
-}
+})
 
 export default function SignPage() {
-    const [showingForm, switchForm] = React.useState(SIGN_UP_FORM);
+    const [showingForm, switchForm] = React.useState(SIGN_IN_FORM);
     const [showingPanelType, switchType] = React.useState(PASSENGER_TYPE)
 
     const renderSpecificForm = function () {
@@ -114,9 +141,9 @@ export default function SignPage() {
     }
 
     return (
-        <div className="login-page">
-            <div className="form">
-                { renderSpecificForm() }
+        <div className="page">
+            <div className="panel">
+                {renderSpecificForm()}
             </div>
         </div>
     )
